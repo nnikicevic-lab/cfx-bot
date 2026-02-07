@@ -68,7 +68,7 @@ client.on('messageCreate', async msg => {
         console.error("Greška pri dohvaćanju trenutnih igrača:", err.message);
       }
 
-      // bolduj one koji su trenutno online i formatiraj kao listu
+      // bold za trenutno online
       const names = result.rows.map((r, i) => {
         const displayName = currentPlayers.includes(r.name) ? `**${r.name}**` : r.name;
         return `${i + 1}. ${displayName}`;
@@ -78,6 +78,24 @@ client.on('messageCreate', async msg => {
     } catch (err) {
       console.error("Greška u bazi:", err.message);
       msg.reply("Greška u bazi.");
+    }
+  }
+
+  // komanda !online
+  if (msg.content === "!online") {
+    try {
+      const res = await axios.get(SERVER_URL);
+      const currentPlayers = res.data.Data.players || [];
+
+      if (!currentPlayers.length) {
+        return msg.reply("Trenutno nema online igrača.");
+      }
+
+      const names = currentPlayers.map((p, i) => `${i + 1}. **${p.name}**`).join("\n");
+      msg.reply("Trenutno online igrači:\n" + names);
+    } catch (err) {
+      console.error("Greška pri dohvaćanju trenutnih igrača:", err.message);
+      msg.reply("Greška pri dohvaćanju trenutnih igrača.");
     }
   }
 });
