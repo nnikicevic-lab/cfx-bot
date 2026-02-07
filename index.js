@@ -1,13 +1,14 @@
+const { Client, GatewayIntentBits } = require('discord.js');
+const axios = require('axios');
+const { Client: PgClient } = require('pg');
 const http = require('http');
-const port = process.env.PORT || 3000;
+
+// HTTP server za Render health-check
+const port = process.env.PORT || 10000;
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('Bot is running\n');
 }).listen(port);
-
-const { Client, GatewayIntentBits } = require('discord.js');
-const axios = require('axios');
-const { Client: PgClient } = require('pg');
 
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const SERVER_URL = process.env.SERVER_URL || "https://frontend.cfx-services.net/api/servers/single/3mlymr";
@@ -31,7 +32,8 @@ const client = new Client({
   ]
 });
 
-client.once('ready', () => {
+// event ready
+client.once('clientReady', () => {
   console.log(`Bot je online kao ${client.user.tag}`);
 });
 
@@ -57,7 +59,7 @@ async function fetchPlayers() {
 
 setInterval(fetchPlayers, 60000);
 
-// komanda !igraci
+// komande
 client.on('messageCreate', async msg => {
   if (msg.content === "!igraci") {
     try {
@@ -88,7 +90,6 @@ client.on('messageCreate', async msg => {
     }
   }
 
-  // komanda !online
   if (msg.content === "!online") {
     try {
       const res = await axios.get(SERVER_URL);
@@ -108,4 +109,3 @@ client.on('messageCreate', async msg => {
 });
 
 client.login(DISCORD_TOKEN);
-
