@@ -22,9 +22,8 @@ async function fetchPlayers() {
 
     const players = [];
 
-    // ⚠️ Ovdje moraš prilagoditi selektor prema tačnoj strukturi stranice
-    // Primjer: ako su imena u tabeli, koristi $("table tr td.player-name")
-    $("div.players-tab li, div.players-tab table tr td").each((i, el) => {
+    // Imena igrača su u <div class="_root_gg27t_1 ..."> tagovima
+    $("div._root_gg27t_1").each((i, el) => {
       const name = $(el).text().trim();
       if (name) players.push(name);
     });
@@ -39,6 +38,7 @@ async function fetchPlayers() {
   }
 }
 
+// Povlači listu svakih 60 sekundi
 setInterval(fetchPlayers, 60000);
 
 client.on('messageCreate', msg => {
@@ -46,7 +46,7 @@ client.on('messageCreate', msg => {
     db.all("SELECT name FROM players", [], (err, rows) => {
       if (err) return msg.reply("Greška u bazi.");
       const names = rows.map(r => r.name).join(", ");
-      msg.reply("Lista svih igrača: " + names);
+      msg.reply("Lista svih igrača: " + (names || "Nema trenutno podataka."));
     });
   }
 });
