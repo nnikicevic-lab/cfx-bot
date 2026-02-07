@@ -68,15 +68,13 @@ client.on('messageCreate', async msg => {
         console.error("Greška pri dohvaćanju trenutnih igrača:", err.message);
       }
 
-      // bolduj one koji su trenutno online
-      const names = result.rows.map(r => {
-        if (currentPlayers.includes(r.name)) {
-          return `**${r.name}**`; // bold ako je trenutno online
-        }
-        return r.name;
-      }).join(", ");
+      // bolduj one koji su trenutno online i formatiraj kao listu
+      const names = result.rows.map((r, i) => {
+        const displayName = currentPlayers.includes(r.name) ? `**${r.name}**` : r.name;
+        return `${i + 1}. ${displayName}`;
+      }).join("\n");
 
-      msg.reply("Lista svih igrača (trenutno online boldovani): " + names);
+      msg.reply("Lista svih igrača (trenutno online boldovani):\n" + names);
     } catch (err) {
       console.error("Greška u bazi:", err.message);
       msg.reply("Greška u bazi.");
