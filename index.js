@@ -1,40 +1,46 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const axios = require('axios');
+const cheerio = require('cheerio');
 const sqlite3 = require('sqlite3').verbose();
 
-// --- KONFIGURACIJA ---
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN; 
-const CFX_URL = process.env.CFX_URL || "http://45.151.44.139:30120/players.json";
+const SERVER_URL = process.env.SERVER_URL || "https://servers.redm.net/servers/detail/3mlymr";
 
-// --- BAZA ---
 const db = new sqlite3.Database('./players.db');
 db.run("CREATE TABLE IF NOT EXISTS players (name TEXT UNIQUE)");
 
-// --- DISCORD BOT ---
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 client.once('ready', () => {
   console.log(`Bot je online kao ${client.user.tag}`);
 });
 
-// --- FUNKCIJA ZA DODAVANJE IGRAČa ---
 async function fetchPlayers() {
   try {
-    const res = await axios.get(CFX_URL);
-    const players = res.data;
+    const res = await axios.get(SERVER_URL);
+    const $ = cheerio.load(res.data);
+
+    const players = [];
+
+    // ⚠️ Ovdje moraš prilagoditi selektor prema tačnoj strukturi stranice
+    // Primjer: ako su imena u tabeli, koristi $("table tr td.player-name")
+    $("div.players-tab li, div.players-tab table tr td").each((i, el) => {
+      const name = $(el).text().trim();
+      if (name) players.push(name);
+    });
 
     players.forEach(player => {
-      db.run("INSERT OR IGNORE INTO players(name) VALUES(?)", [player.name]);
+      db.run("INSERT OR IGNORE INTO players(name) VALUES(?)", [player]);
     });
+
+    console.log("Dohvaćeni igrači:", players);
   } catch (err) {
     console.error("Greška pri dohvaćanju igrača:", err.message);
   }
 }
 
-// --- PERIODIČNO DOHVATANJE ---
-setInterval(fetchPlayers, 60000); // svakih 60 sekundi
+setInterval(fetchPlayers, 60000);
 
-// --- KOMANDE ---
 client.on('messageCreate', msg => {
   if (msg.content === "!igraci") {
     db.all("SELECT name FROM players", [], (err, rows) => {
